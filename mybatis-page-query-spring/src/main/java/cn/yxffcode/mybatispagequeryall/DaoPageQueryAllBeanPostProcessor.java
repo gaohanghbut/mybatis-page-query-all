@@ -3,15 +3,18 @@ package cn.yxffcode.mybatispagequeryall;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+
 /**
  * @author gaohang on 16/8/4.
  */
 public class DaoPageQueryAllBeanPostProcessor implements BeanPostProcessor {
-    private final Class<?> annotation;
+    private final Class<? extends Annotation> annotation;
 
     public DaoPageQueryAllBeanPostProcessor(final String annotationName) {
         try {
-            this.annotation = Class.forName(annotationName);
+            this.annotation = (Class<? extends Annotation>) Class.forName(annotationName);
             if (!annotation.isAnnotation()) {
                 throw new IllegalArgumentException(annotationName + " is not an annotation");
             }
@@ -20,13 +23,38 @@ public class DaoPageQueryAllBeanPostProcessor implements BeanPostProcessor {
         }
     }
 
-    @Override public Object postProcessBeforeInitialization(final Object o, final String beanName)
+    @Override public Object postProcessBeforeInitialization(final Object bean, final String beanName)
             throws BeansException {
-        return o;
+        return bean;
     }
 
-    @Override public Object postProcessAfterInitialization(final Object o, final String beanName)
+    @Override public Object postProcessAfterInitialization(final Object bean, final String beanName)
             throws BeansException {
-        return null;
+        Class<?> type = bean.getClass();
+        while (type != Object.class) {
+            final Annotation annotation = type.getAnnotation(this.annotation);
+            if (annotation != null && isMarkedByPaged(type)) {
+                return DaoProxy.wrapNotNull(bean);
+            }
+            type = type.getSuperclass();
+        }
+        final Class<?>[] interfaces = bean.getClass().getInterfaces();
+        for (Class<?> in : interfaces) {
+            final Annotation annotation = in.getAnnotation(this.annotation);
+            if (annotation != null && isMarkedByPaged(type)) {
+                return DaoProxy.wrapNotNull(bean);
+            }
+        }
+        return bean;
+    }
+
+    private boolean isMarkedByPaged(Class<?> type) {
+        final Method[] methods = type.getMethods();
+        for (Method method : methods) {
+            if (method.getAnnotation(Paged.class) != null) {
+                return true;
+            }
+        }
+        return false;
     }
 }
