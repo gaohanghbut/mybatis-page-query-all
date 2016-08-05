@@ -7,6 +7,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
+ * 配置在spring中,用于实现DAO的代理
+ *
  * @author gaohang on 16/8/4.
  */
 public class DaoPageQueryAllBeanPostProcessor implements BeanPostProcessor {
