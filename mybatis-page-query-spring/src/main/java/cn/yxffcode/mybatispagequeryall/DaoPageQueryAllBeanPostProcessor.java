@@ -43,7 +43,7 @@ public class DaoPageQueryAllBeanPostProcessor implements BeanPostProcessor {
         final Class<?>[] interfaces = bean.getClass().getInterfaces();
         for (Class<?> in : interfaces) {
             final Annotation annotation = in.getAnnotation(this.annotation);
-            if (annotation != null && isMarkedByPaged(type)) {
+            if (annotation != null && isMarkedByPaged(in)) {
                 return DaoProxy.wrapNotNull(bean);
             }
         }
